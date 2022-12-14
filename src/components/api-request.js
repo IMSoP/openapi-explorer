@@ -421,7 +421,14 @@ export default class ApiRequest extends LitElement {
 
       // Generate Schema
       if (reqBody.mimeType.includes('json') || reqBody.mimeType.includes('xml') || reqBody.mimeType.includes('text')) {
-        const schemaAsObj = schemaInObjectNotation(reqBody.schema, { includeNulls: this.includeNulls });
+        let schemaAsObj = schemaInObjectNotation(reqBody.schema, { includeNulls: this.includeNulls, useXmlNames: reqBody.mimeType.includes('xml') });
+        // Insert an extra wrapper node for XML requests, if name is documented
+        if (this.selectedMimeType.includes('xml') && reqBody.schema.xml?.name) {
+          const xmlName = reqBody.schema.xml?.name;
+          const wrapperObj = { '::type': 'wrapped-request' };
+          wrapperObj[`<${xmlName}>`] = schemaAsObj;
+          schemaAsObj = wrapperObj;
+        }
         if (this.schemaStyle === 'table') {
           reqBodySchemaHtml = html`
             ${reqBodySchemaHtml}

@@ -436,7 +436,16 @@ export function schemaInObjectNotation(rawSchema, options, level = 0, suffix = '
     obj['::type'] = 'object';
     obj['::deprecated'] = schema.deprecated || false;
     for (const key in schema.properties) {
-      if (schema.required && schema.required.includes(key)) {
+      if (options.useXmlNames) {
+        const xmlName = schema.properties[key]?.xml?.name || key;
+        // Wrapped arrays need to default the item name to the wrapper name
+        let propSchema = schema.properties[key];
+        if (propSchema?.xml?.wrapped) {
+          propSchema = JSON.parse(JSON.stringify(propSchema));
+          propSchema.xml.name = xmlName;
+        }
+        obj[`<${xmlName}>`] = schemaInObjectNotation(propSchema, options, (level + 1));
+      } else if (schema.required && schema.required.includes(key)) {
         obj[`${key}*`] = schemaInObjectNotation(schema.properties[key], options, (level + 1));
       } else {
         obj[key] = schemaInObjectNotation(schema.properties[key], options, (level + 1));
@@ -459,6 +468,15 @@ export function schemaInObjectNotation(rawSchema, options, level = 0, suffix = '
     if (schema.items?.items) {
       obj['::array-type'] = schema.items.items.type;
     }
+
+    // Insert an extra node for wrapped XML arrays
+    if (options.useXmlNames && schema?.xml?.wrapped) {
+      const xmlName = schema.items?.xml?.name || schema.xml.name;
+      const wrapperObj = { '::type': 'wrapped-array' };
+      wrapperObj[`<${xmlName}>`] = obj;
+      return wrapperObj;
+    }
+
     return obj;
   }
 

@@ -1,0 +1,53 @@
+openapi: 3.1.0
+info:
+  title: XML example
+  version: 1.0.0
+paths:
+  /example:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/example'
+      operationId: get-example
+components:
+  schemas:
+    example:
+      type: object
+      additionalProperties: false
+      xml:
+        name: an-xml-object
+      properties:
+        simple:
+          type: string
+        named:
+          type: string
+          xml:
+            name: an-xml-name
+        unwrapped:
+          type: array
+          items:
+            type: string
+        wrapped:
+          type: array
+          items:
+            type: string
+          xml:
+            wrapped: true
+        named-wrapped:
+          type: array
+          items:
+            type: string
+            xml:
+              name: an-xml-item
+          xml:
+            name: an-xml-wrapper
+            wrapped: true

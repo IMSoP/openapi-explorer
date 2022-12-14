@@ -129,7 +129,14 @@ export default class ApiResponse extends LitElement {
           this.selectedMimeType = mimeResp;
         }
         // Generate Schema
-        const schemaTree = schemaInObjectNotation(mimeRespObj.schema, { includeNulls: this.includeNulls });
+        let schemaTree = schemaInObjectNotation(mimeRespObj.schema, { includeNulls: this.includeNulls, useXmlNames: this.selectedMimeType.includes('xml') });
+        // Insert an extra wrapper node for XML responses, if name is documented
+        if (this.selectedMimeType.includes('xml') && mimeRespObj.schema.xml?.name) {
+          const xmlName = mimeRespObj.schema.xml?.name;
+          const wrapperObj = { '::type': 'wrapped-response' };
+          wrapperObj[`<${xmlName}>`] = schemaTree;
+          schemaTree = wrapperObj;
+        }
         // Generate Example
         const respExamples = generateExample(
           (mimeRespObj.examples || ''),
